@@ -15,7 +15,7 @@
  */
 package com.android.providers.blockednumber;
 
-import static com.android.providers.blockednumber.Utils.piiHandle;
+import static android.telecom.Log.piiHandle;
 
 import android.Manifest;
 import android.annotation.NonNull;
