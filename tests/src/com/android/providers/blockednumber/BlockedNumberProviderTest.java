@@ -364,21 +364,9 @@ public class BlockedNumberProviderTest extends AndroidTestCase {
         setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNKNOWN, true);
         assertShouldSystemBlock(true, phoneNumber,
                 createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNKNOWN, false));
-        assertShouldSystemBlock(true, phoneNumber,
-                createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNAVAILABLE, false));
         setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNKNOWN, false);
         assertShouldSystemBlock(false, phoneNumber,
                 createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNKNOWN, false));
-        assertShouldSystemBlock(false, phoneNumber,
-                createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNAVAILABLE, false));
-
-        // Check whether block unavailable calls setting works well
-        setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNAVAILABLE, true);
-        assertShouldSystemBlock(false, phoneNumber,
-                createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNAVAILABLE, false));
-        setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNAVAILABLE, false);
-        assertShouldSystemBlock(false, phoneNumber,
-                createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNAVAILABLE, false));
     }
 
     public void testEnhancedBlockSuppressionAfterEmergencyContact() {
@@ -392,7 +380,6 @@ public class BlockedNumberProviderTest extends AndroidTestCase {
         setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_PRIVATE, true);
         setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_PAYPHONE, true);
         setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNKNOWN, true);
-        setEnhancedBlockSetting(SystemContract.ENHANCED_SETTING_KEY_BLOCK_UNAVAILABLE, true);
 
         // After emergency contact blocks should be suppressed.
         long timestampMillisBeforeEmergencyContact = System.currentTimeMillis();
@@ -406,8 +393,6 @@ public class BlockedNumberProviderTest extends AndroidTestCase {
                 createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_PAYPHONE, false));
         assertShouldSystemBlock(false, phoneNumber,
                 createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNKNOWN, false));
-        assertShouldSystemBlock(false, phoneNumber,
-                createBundleForEnhancedBlocking(TelecomManager.PRESENTATION_UNAVAILABLE, false));
 
         SystemContract.BlockSuppressionStatus status =
                 SystemContract.getBlockSuppressionStatus(mMockContext);
