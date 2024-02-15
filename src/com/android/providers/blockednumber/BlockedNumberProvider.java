@@ -40,6 +40,7 @@ import android.os.CancellationSignal;
 import android.os.PersistableBundle;
 import android.os.Process;
 import android.os.UserHandle;
+import android.os.UserManager;
 import android.provider.BlockedNumberContract;
 import android.provider.BlockedNumberContract.SystemContract;
 import android.telecom.TelecomManager;
@@ -50,6 +51,7 @@ import android.util.Log;
 
 import com.android.common.content.ProjectionMap;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.telephony.flags.Flags;
 import com.android.providers.blockednumber.BlockedNumberDatabaseHelper.Tables;
 
 import java.util.Arrays;
@@ -410,7 +412,16 @@ public class BlockedNumberProvider extends ContentProvider {
         Context context = getContext();
         final String e164Number = Utils.getE164Number(context, phoneNumber, null);
         TelephonyManager tm = context.getSystemService(TelephonyManager.class);
-        return tm.isEmergencyNumber(phoneNumber) || tm.isEmergencyNumber(e164Number);
+
+        if (!Flags.enforceTelephonyFeatureMapping()) {
+            return tm.isEmergencyNumber(phoneNumber) || tm.isEmergencyNumber(e164Number);
+        } else {
+            try {
+                return tm.isEmergencyNumber(phoneNumber) || tm.isEmergencyNumber(e164Number);
+            } catch (UnsupportedOperationException e) {
+                return false;
+            }
+        }
     }
 
     private boolean isBlocked(String phoneNumber) {
@@ -453,7 +464,11 @@ public class BlockedNumberProvider extends ContentProvider {
     }
 
     private boolean canCurrentUserBlockUsers() {
-        return getContext().getUserId() == UserHandle.USER_SYSTEM;
+        int currentUserId = getContext().getUserId();
+        UserManager userManager = getContext().getSystemService(UserManager.class);
+        // Allow USER_SYSTEM and managed profile to block users
+        return (currentUserId == UserHandle.USER_SYSTEM ||
+                (userManager != null && userManager.isManagedProfile(currentUserId)));
     }
 
     private void notifyEmergencyContact() {
