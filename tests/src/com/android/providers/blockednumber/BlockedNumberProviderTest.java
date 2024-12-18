@@ -22,6 +22,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
@@ -631,6 +632,20 @@ public class BlockedNumberProviderTest extends AndroidTestCase {
         assertIsBlocked(false, "abc.def@gmail.com");
     }
 
+    public void testNumberBlockingWorksWithoutTelephony() {
+        doThrow(new IllegalStateException()).when(mMockContext.mTelephonyManager)
+                .isEmergencyNumber(anyString());
+        assertEquals(BlockedNumberContract.STATUS_NOT_BLOCKED,
+                SystemContract.shouldSystemBlockNumber(mMockContext, "6505551212", null));
+    }
+
+    public void testNumberBlockingWorksWithoutTelephonyTwo() {
+        doThrow(new UnsupportedOperationException()).when(mMockContext.mTelephonyManager)
+                .isEmergencyNumber(anyString());
+        assertEquals(BlockedNumberContract.STATUS_NOT_BLOCKED,
+                SystemContract.shouldSystemBlockNumber(mMockContext, "6505551212", null));
+    }
+
     public void testEmergencyNumbersAreNotBlockedBySystem() {
         String emergencyNumber = getEmergencyNumberFromSystemPropertiesOrDefault();
         doReturn(true).when(mMockContext.mTelephonyManager).isEmergencyNumber(emergencyNumber);
@@ -750,6 +765,15 @@ public class BlockedNumberProviderTest extends AndroidTestCase {
         doReturn(secondaryUserId).when(mMockContext).getUserId();
         doReturn(false).when(mMockUserManager).isManagedProfile(eq(secondaryUserId));
         assertFalse(BlockedNumberContract.canCurrentUserBlockNumbers(mMockContext));
+    }
+
+    public void testCanCurrentUserBlockUsers_MainUser() {
+        if (android.multiuser.Flags.allowMainUserToAccessBlockedNumberProvider()) {
+            int mainUserId = 12;
+            doReturn(mainUserId).when(mMockContext).getUserId();
+            doReturn(true).when(mMockUserManager).isMainUser();
+            assertTrue(BlockedNumberContract.canCurrentUserBlockNumbers(mMockContext));
+        }
     }
 
     private void assertIsBlocked(boolean expected, String phoneNumber) {
